@@ -74,6 +74,9 @@ export default async function BlogPost({ params }) {
         } catch (e) { /* ignore parse error */ }
     }
 
+    // Clean up excessive non-breaking spaces injected by copy-pasting into Rich Text editors
+    const cleanedContent = post.content.replace(/&nbsp;/g, ' ');
+
     return (
         <article className="animate-fade-in" style={{ maxWidth: "800px", margin: "0 auto" }}>
             {/* Dynamic JSON-LD injection */}
@@ -98,7 +101,7 @@ export default async function BlogPost({ params }) {
             </header>
 
             {post.coverImage && (
-                <div style={{ width: "100%", height: "400px", borderRadius: "16px", overflow: "hidden", marginBottom: "3rem", boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }}>
+                <div className="post-cover-image">
                     <img src={post.coverImage} alt={post.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
             )}
@@ -106,7 +109,7 @@ export default async function BlogPost({ params }) {
             <div
                 className="skeuo-panel"
                 style={{ fontSize: "1.1rem", lineHeight: "1.8" }}
-                dangerouslySetInnerHTML={{ __html: post.content }}
+                dangerouslySetInnerHTML={{ __html: cleanedContent }}
             />
         </article>
     );

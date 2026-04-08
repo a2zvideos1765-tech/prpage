@@ -55,7 +55,7 @@ export default function RootLayout({ children }) {
           </div>
         </header>
 
-        <main className="container" style={{ minHeight: "80vh", padding: "4rem 2rem" }}>
+        <main className="container main-content" style={{ minHeight: "80vh" }}>
           {children}
         </main>
 

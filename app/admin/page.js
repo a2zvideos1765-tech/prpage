@@ -61,9 +61,9 @@ export default function AdminDashboard() {
                                 </div>
                             </div>
                             <div style={{ display: "flex", gap: "0.5rem" }}>
-                                <a href={`/blog/${post.slug}`} target="_blank" className="btn" style={{ background: "transparent", border: "1px solid var(--skeuo-border)" }}>View</a>
+                                <a href={`/blog/${post.slug}`} target="_blank" className="btn" style={{ whiteSpace: "nowrap" }}>View</a>
                                 {/* <Link href={`/admin/draft?id=${post.id}`} className="btn" style={{ background: "transparent", border: "1px solid var(--accent)" }}>Edit</Link> */}
-                                <button onClick={() => deletePost(post.id)} className="btn" style={{ background: "#ef4444" }}>Delete</button>
+                                <button onClick={() => deletePost(post.id)} className="btn" style={{ background: "#ef4444", whiteSpace: "nowrap" }}>Delete</button>
                             </div>
                         </div>
                     ))}

@@ -3,14 +3,17 @@
 import { useState, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
 import 'react-quill-new/dist/quill.snow.css';
 
-// Dynamically import ReactQuill to prevent document/window SSR issues
+import QuillImageDropAndPaste from 'quill-image-drop-and-paste';
+
+// Import Quill via dynamic import so we can register modules safely
 const ReactQuill = dynamic(
     async () => {
-        const { default: RQ } = await import("react-quill-new");
+        const { default: RQ, Quill } = await import("react-quill-new");
+        Quill.register('modules/imageDropAndPaste', QuillImageDropAndPaste);
         const QuillWrapper = ({ forwardedRef, ...props }) => <RQ ref={forwardedRef} {...props} />;
         QuillWrapper.displayName = 'QuillWrapper';
         return QuillWrapper;
@@ -37,6 +40,25 @@ export default function DraftPost() {
     const [uploadingCover, setUploadingCover] = useState(false);
     const quillRef = useRef(null);
 
+    // Shared upload logic for both Click and Drag/Drop
+    const uploadImageFile = async (file) => {
+        const uploadData = new FormData();
+        uploadData.append('file', file);
+
+        const res = await fetch('/api/upload', {
+            method: 'POST',
+            body: uploadData
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || "Upload via API failed");
+        }
+
+        const { url } = await res.json();
+        return url;
+    };
+
     const imageHandler = useCallback(() => {
         const input = document.createElement('input');
         input.setAttribute('type', 'file');
@@ -46,23 +68,54 @@ export default function DraftPost() {
         input.onchange = async () => {
             const file = input.files?.[0];
             if (file) {
-                const storageRef = ref(storage, 'blog_images/' + Date.now() + '_' + file.name);
-                const uploadTask = uploadBytesResumable(storageRef, file);
-                uploadTask.on('state_changed',
-                    (snapshot) => { },
-                    (error) => { console.error("Upload failed", error); alert("Image upload failed."); },
-                    async () => {
-                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                        const quill = quillRef.current.getEditor();
-                        const range = quill.getSelection(true);
-                        quill.insertEmbed(range.index, 'image', downloadURL);
+                try {
+                    const url = await uploadImageFile(file);
+                    const quill = quillRef.current.getEditor();
+                    const range = quill.getSelection(true);
+
+                    // Prompt for Alt Text
+                    const altText = prompt("Enter Alt Text for this image (Important for SEO):");
+
+                    if (altText) {
+                        // Insert as raw HTML to support Alt attributes in Quill
+                        quill.clipboard.dangerouslyPasteHTML(range.index, `<img src="${url}" alt="${altText}" />`);
+                    } else {
+                        quill.insertEmbed(range.index, 'image', url);
                     }
-                );
+                } catch (error) {
+                    console.error("Upload failed", error);
+                    alert("Image upload failed: " + error.message);
+                }
             }
         };
     }, []);
 
+    const imageDropHandler = useCallback(async (dataUrl, type, imageData) => {
+        const file = imageData.toFile();
+        if (file) {
+            try {
+                const url = await uploadImageFile(file);
+                const quill = quillRef.current.getEditor();
+                const range = quill.getSelection() || { index: quill.getLength() };
+
+                const altText = prompt("Enter Alt Text for pasted/dropped image:");
+
+                if (altText) {
+                    quill.clipboard.dangerouslyPasteHTML(range.index, `<img src="${url}" alt="${altText}" />`);
+                } else {
+                    quill.insertEmbed(range.index, 'image', url);
+                }
+            } catch (error) {
+                console.error("Drop Upload Failed", error);
+                alert("Drag and Drop upload failed.");
+            }
+        }
+    }, []);
+
     const modules = useMemo(() => ({
+        imageDropAndPaste: {
+            handler: imageDropHandler
+        },
         toolbar: {
             container: [
                 [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
@@ -75,23 +128,34 @@ export default function DraftPost() {
                 image: imageHandler
             }
         }
-    }), [imageHandler]);
+    }), [imageHandler, imageDropHandler]);
 
-    const handleCoverImageUpload = (e) => {
+    const handleCoverImageUpload = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
         setUploadingCover(true);
-        const storageRef = ref(storage, 'blog_covers/' + Date.now() + '_' + file.name);
-        const uploadTask = uploadBytesResumable(storageRef, file);
-        uploadTask.on('state_changed',
-            (snapshot) => { },
-            (error) => { console.error(error); alert("Cover image upload failed."); setUploadingCover(false); },
-            async () => {
-                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                setFormData(prev => ({ ...prev, coverImage: downloadURL }));
-                setUploadingCover(false);
+        try {
+            const uploadData = new FormData();
+            uploadData.append('file', file);
+
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: uploadData
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || "Cover upload via API failed");
             }
-        );
+
+            const { url } = await res.json();
+            setFormData(prev => ({ ...prev, coverImage: url }));
+        } catch (error) {
+            console.error(error);
+            alert("Cover image upload failed: " + error.message);
+        } finally {
+            setUploadingCover(false);
+        }
     };
 
     const handleContentChange = (content) => {
@@ -175,14 +239,30 @@ export default function DraftPost() {
                 <input name="title" value={formData.title} onChange={handleChange} className="form-input" required />
 
                 <label className="form-label" style={{ marginTop: "1.5rem" }}>Cover Image</label>
-                <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                    <input type="file" accept="image/*" onChange={handleCoverImageUpload} className="form-input" style={{ flex: 1, padding: "0.5rem" }} />
-                    {uploadingCover && <span style={{ color: "var(--accent)", fontSize: "0.9rem" }}>Uploading...</span>}
+                <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
+                    <label className="file-upload-btn">
+                        Choose File
+                        <input type="file" accept="image/*" onChange={handleCoverImageUpload} className="form-file-input" />
+                    </label>
+
+                    <span style={{ color: "var(--text-secondary)", fontStyle: "italic", fontSize: "0.9rem" }}>OR</span>
+
+                    <input
+                        name="coverImage"
+                        value={formData.coverImage}
+                        onChange={handleChange}
+                        className="form-input"
+                        placeholder="Paste image URL here..."
+                        style={{ flex: 1, minWidth: "200px" }}
+                    />
+
+                    {uploadingCover && <span style={{ color: "var(--accent)", fontSize: "0.9rem", fontWeight: "bold" }}>Uploading...</span>}
                 </div>
                 {formData.coverImage && (
-                    <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "0.5rem" }}>
-                        Uploaded: <a href={formData.coverImage} target="_blank" rel="noreferrer" style={{ textDecoration: "underline", color: "var(--accent)" }}>View Image</a>
-                    </p>
+                    <div style={{ marginTop: "1rem" }}>
+                        <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.5rem" }}>Image Preview:</p>
+                        <img src={formData.coverImage} alt="Cover Preview" style={{ maxWidth: "200px", borderRadius: "8px", border: "1px solid var(--skeuo-border)" }} />
+                    </div>
                 )}
 
                 <label className="form-label" style={{ marginTop: "1.5rem" }}>Content (Rich Text Editor)</label>
