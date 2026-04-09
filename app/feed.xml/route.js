@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export const revalidate = 3600; // Cache feed for 1 hour
+export const dynamic = 'force-dynamic'; // Force instant generation
 
 export async function GET() {
   try {
-    const baseUrl = 'https://yourwebsite.com';
+    const baseUrl = 'https://news.studiohappens.tech';
     const siteTitle = 'Premium PR & News Agency';
     const siteDesc = 'Stay up to date with our top press releases, modern insights, and news.';
 

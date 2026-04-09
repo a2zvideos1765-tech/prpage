@@ -1,9 +1,9 @@
 import { prisma } from '@/lib/prisma';
 
-export const revalidate = 3600; // Cache the sitemap for 1 hour
+export const dynamic = 'force-dynamic'; // Force instant generation
 
 export default async function sitemap() {
-  const baseUrl = 'https://yourwebsite.com';
+  const baseUrl = 'https://news.studiohappens.tech';
 
   // 1. Core static routes
   const staticRoutes = [

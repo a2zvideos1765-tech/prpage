@@ -26,7 +26,7 @@ export async function generateMetadata({ params }) {
             modifiedTime: post.updatedAt.toISOString(),
         },
         alternates: {
-            canonical: `https://yourwebsite.com/blog/${slug}`
+            canonical: `https://news.studiohappens.tech/blog/${slug}`
         }
     };
 }
@@ -48,11 +48,11 @@ export default async function BlogPost({ params }) {
         "@type": ["NewsArticle", "BlogPosting"],
         "mainEntityOfPage": {
             "@type": "WebPage",
-            "@id": `https://yourwebsite.com/blog/${slug}`
+            "@id": `https://news.studiohappens.tech/blog/${slug}`
         },
         "headline": post.title,
         "description": post.metaDescription || post.excerpt,
-        "image": post.coverImage || "https://yourwebsite.com/og-default.jpg",
+        "image": post.coverImage || "https://news.studiohappens.tech/og-default.jpg",
         "author": {
             "@type": "Organization",
             "name": "Premium PR Agency"
@@ -62,7 +62,7 @@ export default async function BlogPost({ params }) {
             "name": "Premium PR Agency",
             "logo": {
                 "@type": "ImageObject",
-                "url": "https://yourwebsite.com/logo.png"
+                "url": "https://news.studiohappens.tech/logo.png"
             }
         },
         "datePublished": post.createdAt.toISOString(),

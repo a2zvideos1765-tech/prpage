@@ -4,7 +4,7 @@ import "./globals.css";
 
 // AEO/SEO Defaults
 export const metadata = {
-  metadataBase: new URL('https://yourwebsite.com'),
+  metadataBase: new URL('https://news.studiohappens.tech'),
   title: {
     template: "%s | PR & News",
     default: "Latest PR & News | Premium Agency",
@@ -13,7 +13,7 @@ export const metadata = {
   openGraph: {
     title: "Latest PR & News | Premium Agency",
     description: "Stay up to date with our top press releases, modern insights, and news.",
-    url: "https://yourwebsite.com",
+    url: "https://news.studiohappens.tech",
     siteName: "PR & News Agency",
     images: [
       {
@@ -38,8 +38,8 @@ export default function RootLayout({ children }) {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "Premium PR Agency",
-    "url": "https://yourwebsite.com",
-    "logo": "https://yourwebsite.com/logo.png"
+    "url": "https://news.studiohappens.tech",
+    "logo": "https://news.studiohappens.tech/logo.png"
   };
 
   return (
