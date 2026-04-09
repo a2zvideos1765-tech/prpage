@@ -2,6 +2,7 @@ import "./globals.css";
 
 // AEO/SEO Defaults
 export const metadata = {
+  metadataBase: new URL('https://yourwebsite.com'),
   title: {
     template: "%s | PR & News",
     default: "Latest PR & News | Premium Agency",

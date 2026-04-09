@@ -24,6 +24,9 @@ export async function generateMetadata({ params }) {
             type: "article",
             publishedTime: post.createdAt.toISOString(),
             modifiedTime: post.updatedAt.toISOString(),
+        },
+        alternates: {
+            canonical: `https://yourwebsite.com/blog/${slug}`
         }
     };
 }
@@ -39,10 +42,10 @@ export default async function BlogPost({ params }) {
         notFound();
     }
 
-    // Generate dynamic JSON-LD for "BlogPosting"
+    // Generate dynamic JSON-LD merging both definitions
     const schemaMarkup = {
         "@context": "https://schema.org",
-        "@type": "BlogPosting",
+        "@type": ["NewsArticle", "BlogPosting"],
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": `https://yourwebsite.com/blog/${slug}`

@@ -18,7 +18,7 @@ export async function POST(request) {
       "metaDescription": a compelling description under 160 chars.
       "excerpt": a 2-sentence summary.
       "faqJson": stringified JSON-LD Array of FAQPage schema based on the content.
-      "customSchema": stringified JSON-LD for BlogPosting with keywords.
+      "customSchema": stringified JSON-LD where "@type" is an array: ["NewsArticle", "BlogPosting"] with keywords.
       `;
 
         // 1. Try Gemini AI
