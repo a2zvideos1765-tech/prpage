@@ -191,8 +191,8 @@ export default function DraftPost() {
                     metaTitle: data.metaTitle || prev.metaTitle,
                     metaDescription: data.metaDescription || prev.metaDescription,
                     excerpt: data.excerpt || prev.excerpt,
-                    faqJson: data.faqJson ? JSON.stringify(data.faqJson) : prev.faqJson,
-                    customSchema: data.customSchema ? JSON.stringify(data.customSchema) : prev.customSchema,
+                    faqJson: data.faqJson ? (typeof data.faqJson === 'string' ? data.faqJson : JSON.stringify(data.faqJson)) : prev.faqJson,
+                    customSchema: data.customSchema ? (typeof data.customSchema === 'string' ? data.customSchema : JSON.stringify(data.customSchema)) : prev.customSchema,
                 }));
                 alert("AI successfully generated SEO mapping and structured data!");
             } else {
